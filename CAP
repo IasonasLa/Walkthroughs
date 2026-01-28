@@ -1,0 +1,19 @@
+CAP
+
+**Platform:** Hack The Box  
+**Difficulty:** Easy  
+**OS:** Linux   
+
+
+---
+
+## 🧠 Summary
+Short description of the machine and main attack vectors.
+
+---
+
+## 🔍 initiall reconesance 
+
+### Nmap
+```bash
+nmap -sC -sV -oA nmap/initial 10.10.10.X
