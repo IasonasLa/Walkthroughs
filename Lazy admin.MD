@@ -33,6 +33,7 @@ This revealed the following interesting <em><strong>paths</strong><em>:
 
 In the first link, I found a username: <em><strong>manager</strong><em> and a hash:
 
+
 `42f749ade7f9e195bf475f37a44cafcb:Password123`
 
 <h4>Hash Cracking</h4>
