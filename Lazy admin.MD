@@ -24,7 +24,9 @@ When visiting `http://host:80`, we see the default Apache landing page.
 I used:
 
 `feroxbuster -u http://<host>/`
+
 ![ferox](images/ferox.png)
+
 This revealed the following interesting <em><strong>paths</strong><em>:
 
 <http://host/content/inc/mysql_backup/mysql_bakup_20191129023059-1.5.1.sql>
@@ -37,17 +39,21 @@ In the first link, I found a username: <em><strong>manager</strong><em> and a ha
 ![injection](images/injection.png)
 
 
-`42f749ade7f9e195bf475f37a44cafcb:Password123`
-![hashcat](images/hascat.png)
+
+
 <h4>Hash Cracking</h4>
 
 I cracked the hash using:
 
 `hashcat -m 0 42f749ade7f9e195bf475f37a44cafcb /usr/share/wordlists/rockyou.txt`
 
+![hashcat](images/hascat.png)
+
+`42f749ade7f9e195bf475f37a44cafcb:Password123`
 After cracking it, I logged in at:
 
 <http://host/content/as/>
+
 ![portal](images/portal.png)
 
 using those credentials.
@@ -55,6 +61,7 @@ using those credentials.
 <h4>Gaining a Shell</h4>
 
 Inside the platform, any <em><strong>media center or plugin</strong><em> is likely to be vulnerable.
+
 ![media1](images/mediacenter.png)
 
 First, I opened a listener:
@@ -62,12 +69,17 @@ First, I opened a listener:
 `nc -lvnp 4444`
 
 Then, I uploaded a  <em><strong>reverse shell</strong><em> as a <em><strong>ZIP</strong><em> file and accessed the uploaded file to trigger it.
+
 ![media](images/mediacenterupload.png)
+
 Reverse shell used:
+
 <https://github.com/Arrexel/phpbash/blob/master/phpbash.php>
 
 The exploit worked, and I obtained a shell.
+
 ![shell](images/firstshell.png)
+
 <h4>User Flag</h4>
 
 Inside /home/itguy, I found the `user.txt` file.
@@ -89,7 +101,9 @@ Next, I executed the script with elevated privileges:
 `sudo /usr/bin/perl /home/itguy/backup.pl`
 
 After running the command, I received a root shell. Running `id` confirmed that I had root privileges.
+
 ![hashcat](images/rootshell.png)
+
 <h4>Root Flag</h4>
 
 The root flag is located in the root directory:
