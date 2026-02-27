@@ -19,7 +19,7 @@ We can see that SSH (22) and HTTP (80) are open. The web server is running Apach
 
 When visiting `http://host:80`, we see the default Apache landing page.
 
-Directory Enumeration
+<h4>Directory Enumeration</h4>
 
 I used:
 
@@ -35,7 +35,7 @@ In the first link, I found a username: manager and a hash:
 
 `42f749ade7f9e195bf475f37a44cafcb:Password123`
 
-Hash Cracking
+<h4>Hash Cracking</h4>
 
 I cracked the hash using:
 
@@ -47,7 +47,7 @@ After cracking it, I logged in at:
 
 using those credentials.
 
-Gaining a Shell
+<h4>Gaining a Shell</h4>
 
 Inside the platform, any media center or plugin is likely to be vulnerable.
 
@@ -62,13 +62,13 @@ Reverse shell used:
 
 The exploit worked, and I obtained a shell.
 
-User Flag
+<h4>User Flag</h4>
 
 Inside /home/itguy, I found the `user.txt` file.
 
 I also noticed a script called backup.pl that uses `/etc/copy.sh`.
 
-Privilege Escalation
+<h4>Privilege Escalation</h4>
 
 Since backup.pl executes /etc/copy.sh, I modified copy.sh to include a reverse shell:
 
@@ -84,7 +84,7 @@ Next, I executed the script with elevated privileges:
 
 After running the command, I received a root shell. Running id confirmed that I had root privileges.
 
-Root Flag
+<h4>Root Flag</h4>
 
 The root flag is located in the root directory:
 
