@@ -15,7 +15,7 @@ I started with:
 |_http-server-header: Apache/2.4.18 (Ubuntu)
 Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel`
 
-We can see that *** SSH (22) and HTTP (80) are open ***. The web server is running Apache 2.4.18 on Ubuntu.
+We can see that <em><strong>SSH (22) and HTTP (80) are open</strong><em>. The web server is running Apache 2.4.18 on Ubuntu.
 
 When visiting `http://host:80`, we see the default Apache landing page.
 
