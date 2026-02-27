@@ -1,4 +1,4 @@
-Lazy Admin
+<h1>Lazy Admin<h1>
 Nmap Scan
 
 I started with:
