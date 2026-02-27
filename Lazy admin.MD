@@ -24,7 +24,7 @@ When visiting `http://host:80`, we see the default Apache landing page.
 I used:
 
 `feroxbuster -u http://<host>/`
-
+![hashcat](images/ferox.png)
 This revealed the following interesting <em><strong>paths</strong><em>:
 
 <http://host/content/inc/mysql_backup/mysql_bakup_20191129023059-1.5.1.sql>
