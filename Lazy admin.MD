@@ -23,13 +23,13 @@ When visiting `http://host:80`, we see the default Apache landing page.
 
 I used:
 
-`feroxbuster -u http://10.114.130.176/`
+`feroxbuster -u http://<host>/`
 
 This revealed the following interesting <em><strong>paths</strong><em>:
 
-<http://10.114.130.176/content/inc/mysql_backup/mysql_bakup_20191129023059-1.5.1.sql>
+<http://host/content/inc/mysql_backup/mysql_bakup_20191129023059-1.5.1.sql>
 
-<http://10.114.130.176/content/as/>
+<http://host/content/as/>
 
 In the first link, I found a username: <em><strong>manager</strong><em> and a hash:
 
@@ -43,7 +43,7 @@ I cracked the hash using:
 
 After cracking it, I logged in at:
 
-<http://10.114.130.176/content/as/>
+<http://host/content/as/>
 
 using those credentials.
 
