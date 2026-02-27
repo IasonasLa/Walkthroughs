@@ -1,9 +1,9 @@
 <h1>Lazy Admin</h1>
-Nmap Scan
+<h3>Nmap Scan</h3>
 
 I started with:
 
-nmap -sC -sV
+'nmap -sC -sV'
 
 22/tcp open  ssh     OpenSSH 7.2p2 Ubuntu 4ubuntu2.8 (Ubuntu Linux; protocol 2.0)
 | ssh-hostkey:
