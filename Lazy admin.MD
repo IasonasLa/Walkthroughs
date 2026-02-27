@@ -32,7 +32,7 @@ This revealed the following interesting <em><strong>paths</strong><em>:
 <http://host/content/as/>
 
 In the first link, I found a username: <em><strong>manager</strong><em> and a hash:
-![hashcat](images/Screenshot (13).png)
+![hashcat](images/hashcat.png)
 
 
 `42f749ade7f9e195bf475f37a44cafcb:Password123`
