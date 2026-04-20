@@ -9,7 +9,7 @@ The results were not very detailed, so I suspected more open ports.
 I performed a full port scan:
 
 nmap -p- <ip>
-![nmap](images/Screenshot20)
+![nmap](images/Screenshot20.png)
 This revealed additional ports. I then ran a targeted scan:
 
 nmap -sC -sV -p 21,22,8081,31331 <ip>
