@@ -59,7 +59,7 @@ anonymous
 milesdyson
 IPC$
 
-![image](images/Screenshot (47).png)
+![image](images/Screenshot47.png)
 
 The anonymous share immediately stands out.
 
@@ -96,7 +96,7 @@ We use rpcclient to enumerate users:
 
 `rpcclient -U "" <target-ip>`
 
-![image](images/Screenshot (49).png)
+![image](images/Screenshot49.png)
 
 Eventually we discover the user:
 
@@ -150,7 +150,7 @@ Contents:
 
 `/45kra24zxs28v3yd`
 
-![image](images/Screenshot (54).png)
+![image](images/Screenshot54.png)
 
 Interesting.
 
@@ -169,13 +169,13 @@ We continue enumerating.
 Discovery:
 /administrator/
 
-![image](images/Screenshot (55).png)
+![image](images/Screenshot55.png)
 
 This reveals a Cuppa CMS administration panel.
 
 <h3>Exploiting Cuppa CMS<\h3>
 
-![image](images/Screenshot (56).png)
+![image](images/Screenshot56.png)
 
 Researching the CMS reveals a known Local File Inclusion vulnerability:
 
@@ -233,7 +233,7 @@ Then trigger the exploit:
 
 Once visited, we receive a reverse shell.
 
-![image](images/Screenshot (58).png)
+![image](images/Screenshot58.png)
 
 <h3>Stabilizing the Shell</h3>
 
