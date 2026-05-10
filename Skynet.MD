@@ -21,6 +21,8 @@ IMAP
 SMB
 </strong><em>
 
+![image](images/Screenshot (44).png)
+
 The web server is usually the best place to begin, so we visit the site first.
 
 <h3>Web Enumeration</h3>
@@ -57,6 +59,8 @@ anonymous
 milesdyson
 IPC$
 
+![image](images/Screenshot (47).png)
+
 The anonymous share immediately stands out.
 
 We connect using a null session:
@@ -91,6 +95,8 @@ Now we need a valid username.
 We use rpcclient to enumerate users:
 
 `rpcclient -U "" <target-ip>`
+
+![image](images/Screenshot (49).png)
 
 Eventually we discover the user:
 
@@ -144,6 +150,8 @@ Contents:
 
 `/45kra24zxs28v3yd`
 
+![image](images/Screenshot (54).png)
+
 Interesting.
 
 <h3>Hidden Web Directory</h3>
@@ -161,9 +169,13 @@ We continue enumerating.
 Discovery:
 /administrator/
 
+![image](images/Screenshot (55).png)
+
 This reveals a Cuppa CMS administration panel.
 
 <h3>Exploiting Cuppa CMS<\h3>
+
+![image](images/Screenshot (56).png)
 
 Researching the CMS reveals a known Local File Inclusion vulnerability:
 
@@ -220,6 +232,8 @@ Then trigger the exploit:
 <em><strong>i tried multiple shells but the one that worked was from https://www.revshells.com/ the PHP PentestMonkey</strong><em>
 
 Once visited, we receive a reverse shell.
+
+![image](images/Screenshot (58).png)
 
 <h3>Stabilizing the Shell</h3>
 
