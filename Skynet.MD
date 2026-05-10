@@ -173,7 +173,7 @@ Discovery:
 
 This reveals a Cuppa CMS administration panel.
 
-<h3>Exploiting Cuppa CMS<\h3>
+<h3>Exploiting Cuppa CMS</h3>
 
 ![image](images/Screenshot56.png)
 
