@@ -21,7 +21,7 @@ IMAP
 SMB
 </strong><em>
 
-![image](images/Screenshot (44).png)
+![image](images/Screenshot44.png)
 
 The web server is usually the best place to begin, so we visit the site first.
 
