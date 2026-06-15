@@ -271,4 +271,4 @@ With root privileges obtained, retrieve the final flag:
 cat /root/root.txt
 ```
 
-### Flag Capture
+### Flag Captured
